@@ -14,7 +14,7 @@
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.22.0.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-     
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -40,16 +40,10 @@
         body.dark-mode .compose-content { background: #000000; border: 1px solid #262626; }
         body.dark-mode .profile-cover { border-bottom: 1px solid #262626; }
         body.dark-mode .trending-sidebar { background: #0a0a0a; border-left-color: #262626; }
-        body.dark-mode .read-mode { background: #1a1a1a; }
-        body.dark-mode .album-card { background: #1a1a1a; border-color: #262626; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            100% { transform: scale(1.2); opacity: 1; }
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -61,237 +55,43 @@
         }
 
         .fade-in { animation: fadeIn 0.4s ease-out; }
-        .post-card { animation: fadeIn 0.3s ease-out; transition: transform 0.2s; }
-        .post-card:active { transform: scale(0.99); }
+        .post-card { animation: fadeIn 0.3s ease-out; }
 
-        /* Read Mode */
-        .read-mode {
-            background: #f5f0e8;
-            color: #3b2a1f;
-            font-size: 18px;
-            line-height: 1.8;
-        }
-        .read-mode .post-card {
-            background: transparent;
-            border-bottom: 1px solid #d4c5b0;
-        }
-        .read-mode .post-caption {
-            font-size: 18px;
+        .logo-spark {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff6b35, #f7b733);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+            animation: sparkGlow 2s infinite;
         }
 
-        /* Professional Image Grid */
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
-            margin: 12px 0;
-        }
-        .image-grid-item {
-            aspect-ratio: 1;
-            overflow: hidden;
-            cursor: pointer;
-            border-radius: 12px;
-            transition: transform 0.2s;
-        }
-        .image-grid-item:hover {
-            transform: scale(1.02);
-        }
-        .image-grid-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .image-grid-item.span-2 {
-            grid-column: span 2;
-        }
-
-        /* Professional Modal for Images */
-        .image-viewer-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .image-viewer-modal.open {
-            opacity: 1;
-            visibility: visible;
-        }
-        .image-viewer-modal img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            border-radius: 16px;
-        }
-        .image-viewer-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 32px;
-            color: white;
-            cursor: pointer;
-        }
-        .image-viewer-prev, .image-viewer-next {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.5);
-            color: white;
-            border: none;
-            font-size: 32px;
-            cursor: pointer;
-            padding: 16px;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .image-viewer-prev { left: 20px; }
-        .image-viewer-next { right: 20px; }
-
-        /* Poll Styles */
-        .poll-container {
-            background: #f5f5f5;
-            border-radius: 16px;
-            padding: 12px;
-            margin: 12px 0;
-        }
-        body.dark-mode .poll-container { background: #1a1a1a; }
-        .poll-option {
-            background: white;
-            border-radius: 12px;
-            padding: 10px;
-            margin: 8px 0;
-            cursor: pointer;
-            transition: 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        body.dark-mode .poll-option { background: #2a2a2a; }
-        .poll-option:hover { background: #ff6b3520; }
-        .poll-option.selected { background: #ff6b35; color: white; }
-        .poll-progress {
-            position: absolute;
-            left: 0;
+        .top-bar {
+            position: sticky;
             top: 0;
-            height: 100%;
-            background: #ff6b3520;
-            transition: width 0.3s;
-            z-index: 0;
-        }
-        .poll-option-text {
-            position: relative;
-            z-index: 1;
+            background: #ffffff;
+            border-bottom: 1px solid #dbdbdb;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
-        }
-
-        /* Album Styles */
-        .album-card {
-            background: white;
-            border-radius: 16px;
-            padding: 12px;
-            margin: 8px;
-            border: 1px solid #dbdbdb;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        body.dark-mode .album-card { background: #1a1a1a; border-color: #262626; }
-        .album-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .album-cover {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 12px;
-            object-fit: cover;
-        }
-
-        /* Sticker Picker */
-        .sticker-picker {
-            position: absolute;
-            bottom: 70px;
-            left: 20px;
-            background: white;
-            border-radius: 20px;
-            padding: 12px;
-            display: none;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            align-items: center;
             z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        body.dark-mode .sticker-picker { background: #1a1a1a; }
-        .sticker-picker span {
-            font-size: 28px;
-            cursor: pointer;
-            transition: 0.1s;
-            padding: 4px;
-        }
-        .sticker-picker span:hover { transform: scale(1.1); }
-
-        /* Schedule Post */
-        .schedule-picker {
-            display: none;
-            margin-top: 12px;
-            padding: 12px;
-            background: #f5f5f5;
-            border-radius: 12px;
-        }
-        body.dark-mode .schedule-picker { background: #1a1a1a; }
-
-        /* Quote Post */
-        .quote-post {
-            background: #f5f5f5;
-            border-radius: 16px;
-            padding: 12px;
-            margin: 8px 0;
-            border-right: 4px solid #ff6b35;
-        }
-        body.dark-mode .quote-post { background: #1a1a1a; }
-
-        /* Last Seen */
-        .last-seen {
-            font-size: 10px;
-            color: #8e8e8e;
-            margin-top: 2px;
         }
 
-        /* Quick Emojis */
-        .quick-emojis {
+        .top-icons {
             display: flex;
-            gap: 8px;
-            padding: 8px 16px;
-            border-top: 1px solid #dbdbdb;
-            background: white;
+            gap: 22px;
+            align-items: center;
         }
-        body.dark-mode .quick-emojis { background: #000000; border-top-color: #262626; }
-        .quick-emojis span {
-            font-size: 20px;
+        .top-icon {
+            font-size: 24px;
+            color: #262626;
             cursor: pointer;
-            transition: 0.1s;
+            position: relative;
         }
-        .quick-emojis span:hover { transform: scale(1.2); }
-
-        /* Double Click Heart Animation */
-        .heart-animation {
-            position: fixed;
-            font-size: 48px;
-            color: #ff6b35;
-            pointer-events: none;
-            z-index: 1000;
-            animation: heartFloat 0.6s ease-out forwards;
-        }
-        @keyframes heartFloat {
-            0% { transform: scale(0.5) translateY(0); opacity: 1; }
-            100% { transform: scale(1.5) translateY(-50px); opacity: 0; }
-        }
+        body.dark-mode .top-icon { color: #ffffff; }
+        .top-icon:hover { color: #ff6b35; }
 
         .auth-screen {
             position: fixed;
@@ -357,37 +157,6 @@
 
         #mainApp { display: none; min-height: 100vh; padding-bottom: 70px; }
 
-        .top-bar {
-            position: sticky;
-            top: 0;
-            background: #ffffff;
-            border-bottom: 1px solid #dbdbdb;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            z-index: 100;
-        }
-        .top-icons { display: flex; gap: 22px; align-items: center; }
-        .top-icon { font-size: 24px; color: #262626; cursor: pointer; position: relative; }
-        body.dark-mode .top-icon { color: #ffffff; }
-        .top-icon:hover { color: #ff6b35; }
-        .notification-badge {
-            position: absolute;
-            top: -6px;
-            right: -10px;
-            background: #ff6b35;
-            color: white;
-            font-size: 9px;
-            font-weight: bold;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
         .main-layout {
             display: flex;
             max-width: 1200px;
@@ -395,169 +164,34 @@
             position: relative;
         }
         .feed-container { flex: 1; max-width: 600px; margin: 0 auto; padding: 0 0 20px; }
-        .trending-sidebar {
-            width: 280px;
-            position: sticky;
-            top: 70px;
-            height: calc(100vh - 70px);
-            overflow-y: auto;
-            padding: 16px;
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: #ffffff;
-            border-left: 1px solid #dbdbdb;
-            margin-right: 20px;
-            border-radius: 16px;
-            display: none;
-        }
-        @media (min-width: 1024px) { .trending-sidebar { display: block; } }
-        .trending-item {
-            padding: 12px;
-            border-bottom: 1px solid #dbdbdb;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .trending-item:hover { background: #f5f5f5; border-radius: 12px; }
-        .trending-hashtag { font-weight: 600; color: #ff6b35; }
-
-        .profile-cover {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, #ff6b35, #f7b733);
-            position: relative;
-            cursor: pointer;
-            background-size: cover;
-            background-position: center;
-        }
-        .profile-cover-edit {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-        }
-        .profile-avatar-wrapper {
-            position: relative;
-            margin-top: -60px;
-            padding: 0 16px;
-        }
-        .profile-avatar-large {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 4px solid #ffffff;
-            background: linear-gradient(135deg, #ff6b35, #f7b733);
-            cursor: pointer;
-        }
-        .avatar-edit-btn {
-            position: absolute;
-            bottom: 5px;
-            right: 20px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-        }
-        .profile-info { padding: 12px 16px 16px; }
-        .profile-name { font-size: 20px; font-weight: 700; }
-        .profile-bio { font-size: 14px; color: #8e8e8e; margin-top: 4px; }
-        .profile-stats {
-            display: flex;
-            gap: 30px;
-            margin-top: 12px;
-            padding: 12px 0;
             border-top: 1px solid #dbdbdb;
-            border-bottom: 1px solid #dbdbdb;
-        }
-        .stat-item { text-align: center; cursor: pointer; }
-        .stat-number { font-weight: 700; font-size: 18px; }
-
-        .profile-buttons {
             display: flex;
-            gap: 10px;
-            margin-top: 16px;
-            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 8px 0 12px;
+            z-index: 100;
         }
-        .profile-btn {
-            flex: 1;
-            padding: 8px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            border: 1px solid #dbdbdb;
-            background: none;
-            min-width: 70px;
-        }
-        .profile-btn-primary {
-            background: linear-gradient(135deg, #ff6b35, #f7b733);
-            color: white;
-            border: none;
-        }
-        .profile-tabs {
-            display: flex;
-            margin-top: 8px;
-        }
-        .profile-tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #8e8e8e;
+        .nav-item {
             background: none;
             border: none;
-        }
-        .profile-tab.active {
+            font-size: 24px;
             color: #262626;
-            border-bottom: 2px solid #262626;
-        }
-        body.dark-mode .profile-tab.active { color: #ffffff; border-bottom-color: #ffffff; }
-        .profile-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-            margin-top: 4px;
-        }
-        .grid-item {
-            aspect-ratio: 1;
-            overflow: hidden;
             cursor: pointer;
-            background: #f5f5f5;
-            position: relative;
+            padding: 6px;
         }
-        .grid-item img, .grid-item video { width: 100%; height: 100%; object-fit: cover; }
+        .nav-item.active { color: #ff6b35; }
 
         .post-card {
             background: #ffffff;
             border-bottom: 1px solid #dbdbdb;
             margin-bottom: 0;
             position: relative;
-        }
-        .post-card.pinned { border-right: 3px solid #ff6b35; }
-        .pinned-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #ff6b35;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 600;
-            z-index: 10;
         }
         .post-header {
             display: flex;
@@ -593,9 +227,7 @@
             max-height: 500px;
             object-fit: cover;
             cursor: pointer;
-            transition: transform 0.2s;
         }
-        .post-image:hover { transform: scale(1.01); }
         .post-actions {
             display: flex;
             gap: 20px;
@@ -607,21 +239,14 @@
             font-size: 24px;
             cursor: pointer;
             color: #262626;
-            transition: transform 0.1s;
         }
-        .post-action:active { transform: scale(0.95); }
         body.dark-mode .post-action { color: #ffffff; }
         .post-action.active { color: #ff6b35; }
         .post-likes { font-weight: 600; font-size: 14px; padding: 0 16px 4px; }
         .post-caption { padding: 0 16px 8px; font-size: 14px; }
         .post-caption span { font-weight: 600; cursor: pointer; }
         .post-hashtags { color: #ff6b35; cursor: pointer; }
-        .post-comments {
-            padding: 0 16px 8px;
-            font-size: 14px;
-            color: #8e8e8e;
-            cursor: pointer;
-        }
+        .post-comments { padding: 0 16px 8px; font-size: 14px; color: #8e8e8e; cursor: pointer; }
         .post-views { padding: 0 16px 8px; font-size: 11px; color: #8e8e8e; }
 
         .compose-modal {
@@ -672,20 +297,6 @@
             border-radius: 12px;
             width: 100%;
             object-fit: cover;
-        }
-        .remove-media {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
         }
         .compose-tools {
             display: flex;
@@ -786,28 +397,6 @@
             color: #ff6b35;
         }
 
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #ffffff;
-            border-top: 1px solid #dbdbdb;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0 12px;
-            z-index: 100;
-        }
-        .nav-item {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #262626;
-            cursor: pointer;
-            padding: 6px;
-        }
-        .nav-item.active { color: #ff6b35; }
-
         .admin-panel {
             position: fixed;
             inset: 0;
@@ -880,42 +469,6 @@
             border-bottom: 1px solid #dbdbdb;
             cursor: pointer;
         }
-        .story-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            min-width: 70px;
-        }
-        .story-ring {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff6b35, #f7b733);
-            padding: 2px;
-        }
-        .story-avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #111;
-        }
-        .add-story-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #1a1a2a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: #ff6b35;
-            cursor: pointer;
-            border: 2px dashed #ff6b35;
-        }
-        .story-name { font-size: 11px; text-align: center; max-width: 70px; overflow: hidden; text-overflow: ellipsis; }
 
         .modal-overlay {
             position: fixed;
@@ -967,6 +520,29 @@
             white-space: nowrap;
         }
 
+        .image-viewer-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+        }
+        .image-viewer-modal.open { opacity: 1; visibility: visible; }
+        .image-viewer-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 16px; }
+        .image-viewer-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 32px;
+            color: white;
+            cursor: pointer;
+        }
+
         .video-call-modal {
             position: fixed;
             inset: 0;
@@ -978,12 +554,7 @@
             visibility: hidden;
         }
         .video-call-modal.open { opacity: 1; visibility: visible; }
-        .video-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+        .video-container { flex: 1; display: flex; flex-direction: column; position: relative; }
         #remoteVideo { flex: 1; background: #000; }
         #localVideo {
             position: absolute;
@@ -994,11 +565,7 @@
             border-radius: 16px;
             border: 2px solid white;
         }
-        .call-controls {
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
+        .call-controls { padding: 20px; display: flex; justify-content: center; }
         .call-end-btn {
             background: #ff6b35;
             color: white;
@@ -1010,45 +577,18 @@
             cursor: pointer;
         }
 
-        .dnd-toggle {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px;
-            background: #f5f5f5;
-            border-radius: 12px;
-            margin-top: 8px;
+        .reactions-popup {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #262626;
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: none;
+            gap: 12px;
+            z-index: 1000;
         }
-        body.dark-mode .dnd-toggle { background: #1a1a1a; }
-        .toggle-switch {
-            width: 50px;
-            height: 24px;
-            background: #dbdbdb;
-            border-radius: 24px;
-            cursor: pointer;
-            position: relative;
-        }
-        .toggle-switch.active { background: #ff6b35; }
-        .toggle-switch::after {
-            content: '';
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            transition: 0.2s;
-        }
-        .toggle-switch.active::after { left: 26px; }
-
-        .report-reason {
-            padding: 10px;
-            margin: 5px 0;
-            background: #f5f5f5;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .report-reason.selected { background: #ff6b35; color: white; }
     </style>
 </head>
 <body>
@@ -1089,9 +629,8 @@
 
 <div id="mainApp">
     <div class="top-bar">
+        <div class="logo-spark" onclick="goToHome()">SPARK</div>
         <div class="top-icons">
-            <div class="top-icon" onclick="openNotifications()" id="notifIcon"><i class="far fa-heart"></i></div>
-            <i class="far fa-comment-dots top-icon" onclick="openConversations()"></i>
             <i class="fas fa-bookmark top-icon" onclick="openSavedPosts()"></i>
             <i class="fas fa-adjust top-icon" onclick="toggleTheme()" id="themeToggle"></i>
             <i class="fas fa-download top-icon" onclick="exportUserData()"></i>
@@ -1102,25 +641,6 @@
     <div class="main-layout">
         <div id="feedContainer" class="feed-container">
             <div class="loading"><div class="spinner"></div><span>جاري التحميل...</span></div>
-        </div>
-        <div class="trending-sidebar" id="trendingSidebar">
-            <div style="font-weight: 700; margin-bottom: 16px; font-size: 18px;">🔥 الترند</div>
-            <div id="trendingList"></div>
-            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #dbdbdb;">
-                <div style="font-weight: 600; margin-bottom: 12px;">⚙️ الإعدادات السريعة</div>
-                <div class="dnd-toggle">
-                    <span>📖 وضع القراءة</span>
-                    <div class="toggle-switch" id="readModeToggle" onclick="toggleReadMode()"></div>
-                </div>
-                <div class="dnd-toggle">
-                    <span>🔕 عدم الإزعاج</span>
-                    <div class="toggle-switch" id="dndToggle" onclick="toggleDoNotDisturb()"></div>
-                </div>
-                <div class="dnd-toggle">
-                    <span>🔒 إخفاء الإعجابات</span>
-                    <div class="toggle-switch" id="hideLikesToggle" onclick="toggleHideLikes()"></div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1141,45 +661,9 @@
             <div class="compose-area">
                 <textarea id="postText" class="compose-textarea" placeholder="اكتب منشوراً..."></textarea>
                 <div id="mediaPreview" class="media-preview"></div>
-                <div class="quick-emojis">
-                    <span onclick="addEmojiToPost('😊')">😊</span>
-                    <span onclick="addEmojiToPost('😂')">😂</span>
-                    <span onclick="addEmojiToPost('❤️')">❤️</span>
-                    <span onclick="addEmojiToPost('🔥')">🔥</span>
-                    <span onclick="addEmojiToPost('🎉')">🎉</span>
-                    <span onclick="addEmojiToPost('😢')">😢</span>
-                    <span onclick="addEmojiToPost('😮')">😮</span>
-                    <span onclick="openStickerPicker()">😀</span>
-                </div>
-                <div id="stickerPicker" class="sticker-picker">
-                    <span onclick="addStickerToPost('😊')">😊</span>
-                    <span onclick="addStickerToPost('😂')">😂</span>
-                    <span onclick="addStickerToPost('❤️')">❤️</span>
-                    <span onclick="addStickerToPost('🔥')">🔥</span>
-                    <span onclick="addStickerToPost('🎉')">🎉</span>
-                    <span onclick="addStickerToPost('😢')">😢</span>
-                    <span onclick="addStickerToPost('😮')">😮</span>
-                    <span onclick="addStickerToPost('😍')">😍</span>
-                    <span onclick="addStickerToPost('🥳')">🥳</span>
-                    <span onclick="addStickerToPost('🤔')">🤔</span>
-                    <span onclick="addStickerToPost('💯')">💯</span>
-                    <span onclick="addStickerToPost('✨')">✨</span>
-                </div>
                 <div class="compose-tools">
                     <button class="compose-tool" onclick="document.getElementById('postImage').click()"><i class="fas fa-image"></i></button>
                     <button class="compose-tool" onclick="document.getElementById('postVideo').click()"><i class="fas fa-video"></i></button>
-                    <button class="compose-tool" onclick="addPollToCompose()"><i class="fas fa-chart-bar"></i></button>
-                    <button class="compose-tool" onclick="toggleSchedulePicker()"><i class="fas fa-calendar-alt"></i></button>
-                </div>
-                <div id="schedulePicker" class="schedule-picker">
-                    <input type="datetime-local" id="scheduleDate" class="chat-input" style="width: 100%;">
-                    <button onclick="schedulePost()" style="margin-top: 8px; background: #ff6b35; color: white; border: none; padding: 8px; border-radius: 12px;">جدولة النشر</button>
-                </div>
-                <div id="pollBuilder" style="display: none; margin-top: 12px;">
-                    <input type="text" id="pollQuestion" placeholder="سؤال التصويت..." class="chat-input" style="width: 100%; margin-bottom: 8px;">
-                    <input type="text" id="pollOption1" placeholder="خيار 1" class="chat-input" style="width: 100%; margin-bottom: 4px;">
-                    <input type="text" id="pollOption2" placeholder="خيار 2" class="chat-input" style="width: 100%; margin-bottom: 4px;">
-                    <button onclick="addPollOption()" style="background: none; border: 1px solid #ff6b35; color: #ff6b35; padding: 4px 8px; border-radius: 8px;">+ إضافة خيار</button>
                 </div>
                 <input type="file" id="postImage" accept="image/*" style="display:none" onchange="previewMedia(this, 'image')">
                 <input type="file" id="postVideo" accept="video/*" style="display:none" onchange="previewMedia(this, 'video')">
@@ -1218,19 +702,16 @@
             <div class="profile-info">
                 <div class="profile-name" id="profileName"></div>
                 <div class="profile-bio" id="profileBio"></div>
-                <div id="profileWebsite" class="profile-bio" style="color: #ff6b35;"></div>
                 <div class="profile-stats">
                     <div class="stat-item" onclick="openFollowersList('followers')"><div class="stat-number" id="profileFollowersCount">0</div><div class="stat-label">متابع</div></div>
                     <div class="stat-item" onclick="openFollowersList('following')"><div class="stat-number" id="profileFollowingCount">0</div><div class="stat-label">يتابع</div></div>
                     <div class="stat-item"><div class="stat-number" id="profilePostsCount">0</div><div class="stat-label">منشورات</div></div>
-                    <div class="stat-item" onclick="openProfileViews()"><div class="stat-number" id="profileViewsCount">0</div><div class="stat-label">مشاهدة</div></div>
                 </div>
                 <div id="profileButtons" class="profile-buttons"></div>
             </div>
             <div class="profile-tabs">
                 <button class="profile-tab active" onclick="loadProfilePosts(currentProfileUser)"><i class="fas fa-table-cells-large"></i> المنشورات</button>
                 <button class="profile-tab" onclick="loadProfileMedia(currentProfileUser)"><i class="fas fa-clapperboard"></i> الوسائط</button>
-                <button class="profile-tab" onclick="openAlbums()"><i class="fas fa-folder"></i> الألبومات</button>
                 <button class="profile-tab" onclick="openSavedPosts()"><i class="fas fa-bookmark"></i> المحفوظة</button>
             </div>
             <div id="profilePostsGrid" class="profile-grid"></div>
@@ -1242,7 +723,6 @@
             <div style="text-align: center; margin-bottom: 20px;"><h3 style="font-weight: 600;">تعديل الملف الشخصي</h3></div>
             <input type="text" id="editName" class="chat-input" style="width: 100%; margin-bottom: 12px;" placeholder="الاسم">
             <textarea id="editBio" class="chat-input" style="width: 100%; min-height: 80px; margin-bottom: 12px;" placeholder="السيرة الذاتية..."></textarea>
-            <input type="url" id="editWebsite" class="chat-input" style="width: 100%; margin-bottom: 12px;" placeholder="رابط الموقع (اختياري)">
             <div style="display: flex; gap: 10px;">
                 <button class="profile-btn" onclick="closeEditProfileModal()">إلغاء</button>
                 <button class="profile-btn profile-btn-primary" onclick="saveProfileEdit()">حفظ</button>
@@ -1254,10 +734,7 @@
         <div class="chat-header">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <div class="profile-avatar-large" id="chatAvatar" style="width: 40px; height: 40px;"></div>
-                <div>
-                    <h3 id="chatUserName" style="font-weight: 600;">محادثة</h3>
-                    <div id="chatLastSeen" class="last-seen"></div>
-                </div>
+                <h3 id="chatUserName" style="font-weight: 600;">محادثة</h3>
             </div>
             <div style="display: flex; gap: 12px;">
                 <button class="chat-send-btn" onclick="startVideoCallWithCurrentUser()" style="color: #ff6b35;"><i class="fas fa-video"></i></button>
@@ -1305,7 +782,7 @@
             <h3 style="font-weight: 600;">بحث</h3>
             <button onclick="closeSearch()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
         </div>
-        <input type="text" id="searchInput" class="chat-input" style="margin: 12px; width: calc(100% - 24px);" placeholder="بحث عن مستخدمين أو هاشتاجات..." onkeyup="searchAll()">
+        <input type="text" id="searchInput" class="chat-input" style="margin: 12px; width: calc(100% - 24px);" placeholder="بحث..." onkeyup="searchAll()">
         <div id="searchResults" style="padding: 12px;"></div>
     </div>
 
@@ -1345,17 +822,6 @@
         <div id="savedPostsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 8px;"></div>
     </div>
 
-    <div id="albumsPanel" class="chat-panel">
-        <div class="chat-header">
-            <h3 style="font-weight: 600;">📁 الألبومات</h3>
-            <button onclick="closeAlbums()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-        <div style="padding: 12px;">
-            <button onclick="createAlbum()" style="background: linear-gradient(135deg, #ff6b35, #f7b733); color: white; border: none; padding: 8px 16px; border-radius: 20px; margin-bottom: 16px;"><i class="fas fa-plus"></i> ألبوم جديد</button>
-            <div id="albumsList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;"></div>
-        </div>
-    </div>
-
     <div id="profileViewsPanel" class="chat-panel">
         <div class="chat-header">
             <h3 style="font-weight: 600;">👁️ من شاهد ملفك</h3>
@@ -1379,9 +845,7 @@
 
     <div id="imageViewerModal" class="image-viewer-modal" onclick="closeImageViewer()">
         <div class="image-viewer-close" onclick="closeImageViewer()">&times;</div>
-        <button class="image-viewer-prev" onclick="event.stopPropagation(); prevImage()">&#10094;</button>
         <img id="viewerImage" src="">
-        <button class="image-viewer-next" onclick="event.stopPropagation(); nextImage()">&#10095;</button>
     </div>
 
     <div id="videoCallModal" class="video-call-modal">
@@ -1394,7 +858,7 @@
         </div>
     </div>
 
-    <div id="reactionsPopup" class="reactions-popup" style="position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #262626; border-radius: 40px; padding: 8px 16px; display: none; gap: 12px; z-index: 1000;">
+    <div id="reactionsPopup" class="reactions-popup">
         <span onclick="sendReaction('👍')">👍</span>
         <span onclick="sendReaction('❤️')">❤️</span>
         <span onclick="sendReaction('😂')">😂</span>
@@ -1408,5 +872,39 @@
 <script src="firebase-config.js"></script>
 <script src="script.js"></script>
 
+<style>
+    .profile-cover-edit, .avatar-edit-btn { position: absolute; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; }
+    .profile-cover-edit { bottom: 12px; right: 12px; width: 36px; height: 36px; }
+    .avatar-edit-btn { bottom: 5px; right: 20px; width: 32px; height: 32px; }
+    .profile-avatar-wrapper { position: relative; margin-top: -60px; padding: 0 16px; }
+    .profile-avatar-large { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 4px solid #ffffff; background: linear-gradient(135deg, #ff6b35, #f7b733); cursor: pointer; }
+    body.dark-mode .profile-avatar-large { border-color: #000000; }
+    .profile-info { padding: 12px 16px 16px; }
+    .profile-name { font-size: 20px; font-weight: 700; }
+    .profile-bio { font-size: 14px; color: #8e8e8e; margin-top: 4px; }
+    .profile-stats { display: flex; gap: 30px; margin-top: 12px; padding: 12px 0; border-top: 1px solid #dbdbdb; border-bottom: 1px solid #dbdbdb; }
+    .stat-number { font-weight: 700; font-size: 18px; }
+    .stat-label { font-size: 12px; color: #8e8e8e; }
+    .profile-buttons { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .profile-btn { flex: 1; padding: 8px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; border: 1px solid #dbdbdb; background: none; min-width: 70px; }
+    .profile-btn-primary { background: linear-gradient(135deg, #ff6b35, #f7b733); color: white; border: none; }
+    .profile-tabs { display: flex; margin-top: 8px; }
+    .profile-tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-size: 14px; font-weight: 600; color: #8e8e8e; background: none; border: none; }
+    .profile-tab.active { color: #262626; border-bottom: 2px solid #262626; }
+    body.dark-mode .profile-tab.active { color: #ffffff; border-bottom-color: #ffffff; }
+    .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 4px; }
+    .grid-item { aspect-ratio: 1; overflow: hidden; cursor: pointer; background: #f5f5f5; }
+    .grid-item img, .grid-item video { width: 100%; height: 100%; object-fit: cover; }
+    .recording-indicator { display: none; align-items: center; gap: 8px; padding: 8px; background: #ff6b3520; border-radius: 20px; }
+    .recording-wave { width: 20px; height: 20px; border-radius: 50%; background: #ff6b35; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 1; } }
+    .dnd-toggle { display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 12px; margin-top: 8px; }
+    .toggle-switch { width: 50px; height: 24px; background: #dbdbdb; border-radius: 24px; cursor: pointer; position: relative; }
+    .toggle-switch.active { background: #ff6b35; }
+    .toggle-switch::after { content: ''; width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 4px; transition: 0.2s; }
+    .toggle-switch.active::after { left: 26px; }
+    .report-reason { padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 8px; cursor: pointer; }
+    .report-reason.selected { background: #ff6b35; color: white; }
+</style>
 </body>
 </html>
