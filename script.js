@@ -33,19 +33,6 @@ function showToast(message, duration = 2000) {
     }, duration);
 }
 
-function openImageModal(src) {
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    if (!modal || !modalImg) return;
-    modalImg.src = src;
-    modal.classList.add('open');
-}
-
-function closeImageModal() {
-    const modal = document.getElementById('imageModal');
-    if (modal) modal.classList.remove('open');
-}
-
 function openImageViewer(images, index) {
     currentImageUrls = images;
     currentImageIndex = index;
@@ -1216,11 +1203,17 @@ async function loadFeed() {
     for (const post of postsArray) {
         await incrementPostViews(post.id);
         
+        // جلب معلومات المستخدم للتحقق من التوثيق
+        const userInfoSnapshot = await db.ref(`users/${post.userId}`).once('value');
+        const userInfo = userInfoSnapshot.val();
+        const isUserVerified = userInfo?.verified || false;
+        
         const isLiked = post.likes && post.likes[currentUser?.uid];
         const likesCount = post.likes ? Object.keys(post.likes).length : 0;
         const isOwner = post.userId === currentUser?.uid;
         const isPinned = pinnedId === post.id;
-        const isSaved = await db.ref(`savedPosts/${currentUser?.uid}/${post.id}`).once('value');
+        const savedSnapshot = await db.ref(`savedPosts/${currentUser?.uid}/${post.id}`).once('value');
+        const isSaved = savedSnapshot.exists();
         
         let formattedText = escapeHtml(post.text);
         if (post.hashtags) {
@@ -1239,7 +1232,6 @@ async function loadFeed() {
             for (let i = 0; i < post.poll.options.length; i++) {
                 const voteCount = post.poll.votes ? Object.values(post.poll.votes).filter(v => v === i).length : 0;
                 const percentage = post.poll.totalVotes > 0 ? (voteCount / post.poll.totalVotes * 100).toFixed(1) : 0;
-                const hasVoted = post.poll.votes && post.poll.votes[currentUser?.uid] !== undefined;
                 pollHtml += `
                     <div class="poll-option" onclick="votePoll('${post.id}', ${i})">
                         <div class="poll-progress" style="width: ${percentage}%;"></div>
@@ -1267,28 +1259,7 @@ async function loadFeed() {
         let mediaHtml = '';
         if (post.mediaUrl) {
             if (post.mediaType === 'image') {
-                const albumSnapshot = await db.ref(`albums/${post.userId}`).once('value');
-                const albums = albumSnapshot.val();
-                let allImages = [post.mediaUrl];
-                if (albums) {
-                    for (const album of Object.values(albums)) {
-                        if (album.images && album.images.includes(post.mediaUrl)) {
-                            allImages = album.images;
-                            break;
-                        }
-                    }
-                }
-                if (allImages.length > 1) {
-                    mediaHtml = `<div class="image-grid">`;
-                    for (let i = 0; i < Math.min(allImages.length, 4); i++) {
-                        mediaHtml += `<div class="image-grid-item ${i === 0 && allImages.length === 3 ? 'span-2' : ''}" onclick="event.stopPropagation(); openImageViewer(${JSON.stringify(allImages)}, ${i})">
-                            <img src="${allImages[i]}">
-                        </div>`;
-                    }
-                    mediaHtml += `</div>`;
-                } else {
-                    mediaHtml = `<img src="${post.mediaUrl}" class="post-image" onclick="event.stopPropagation(); openImageViewer(['${post.mediaUrl}'], 0)">`;
-                }
+                mediaHtml = `<img src="${post.mediaUrl}" class="post-image" onclick="event.stopPropagation(); openImageViewer(['${post.mediaUrl}'], 0)">`;
             } else if (post.mediaType === 'video') {
                 mediaHtml = `<video src="${post.mediaUrl}" class="post-video" controls onclick="event.stopPropagation()"></video>`;
             }
@@ -1303,14 +1274,14 @@ async function loadFeed() {
                             ${post.userAvatar ? `<img src="${post.userAvatar}">` : '<i class="fas fa-user text-white text-xl flex items-center justify-center h-full"></i>'}
                         </div>
                         <div>
-                            <div class="post-username">${escapeHtml(post.userName)}</div>
+                            <div class="post-username">${escapeHtml(post.userName)} ${isUserVerified ? '<i class="fas fa-check-circle text-[#ff6b35] text-xs mr-1"></i>' : ''}</div>
                             <div class="post-time">${formatTime(post.timestamp)} ${post.edited ? '· معدل' : ''}</div>
                         </div>
                     </div>
                     <div style="display: flex; gap: 12px;">
                         ${(isOwner || currentUser?.isAdmin) ? `<button class="post-menu" onclick="event.stopPropagation(); deletePost('${post.id}')"><i class="fas fa-trash-alt"></i></button>` : ''}
                         ${isOwner ? `<button class="post-menu" onclick="event.stopPropagation(); pinPost('${post.id}')"><i class="fas fa-thumbtack"></i></button>` : ''}
-                        <button class="post-menu" onclick="event.stopPropagation(); savePost('${post.id}')"><i class="fas fa-bookmark ${isSaved.exists() ? 'saved' : ''}" style="${isSaved.exists() ? 'color: #f7b733;' : ''}"></i></button>
+                        <button class="post-menu" onclick="event.stopPropagation(); savePost('${post.id}')"><i class="fas fa-bookmark" style="${isSaved ? 'color: #f7b733;' : ''}"></i></button>
                         <button class="post-menu" onclick="event.stopPropagation(); quotePost('${post.id}', '${escapeHtml(post.text)}', '${escapeHtml(post.userName)}')"><i class="fas fa-quote-right"></i></button>
                         <button class="post-menu" onclick="event.stopPropagation(); openReportModal('${post.id}')"><i class="fas fa-flag"></i></button>
                     </div>
@@ -1473,7 +1444,7 @@ window.openProfile = async function(userId) {
     const profileAvatarLarge = document.getElementById('profileAvatarLarge');
     profileAvatarLarge.innerHTML = userData.avatar ? `<img src="${userData.avatar}" style="width:100%;height:100%;object-fit:cover">` : '<i class="fas fa-user text-5xl text-white flex items-center justify-center h-full"></i>';
     
-    document.getElementById('profileName').innerHTML = `${escapeHtml(userData.name)} ${userData.verified ? '<i class="fas fa-check-circle text-[#ff6b35] text-sm"></i>' : ''}`;
+    document.getElementById('profileName').innerHTML = `${escapeHtml(userData.name)} ${userData.verified ? '<i class="fas fa-check-circle text-[#ff6b35] text-sm mr-1"></i>' : ''}`;
     document.getElementById('profileBio').textContent = userData.bio || "مرحباً! أنا في SPARK ✨";
     
     const websiteEl = document.getElementById('profileWebsite');
@@ -1916,8 +1887,33 @@ window.openAdminPanel = async function() {
     document.getElementById('adminPanel').classList.add('open');
 };
 
-window.verifyUser = async function(userId) { await db.ref(`users/${userId}`).update({ verified: true }); showToast('تم توثيق المستخدم'); openAdminPanel(); };
-window.deleteUser = async function(userId) { if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) { await db.ref(`users/${userId}`).remove(); showToast('تم حذف المستخدم'); openAdminPanel(); } };
+window.verifyUser = async function(userId) { 
+    await db.ref(`users/${userId}`).update({ verified: true }); 
+    showToast('✅ تم توثيق المستخدم بنجاح');
+    
+    if (currentUser && currentUser.uid === userId) {
+        currentUser.verified = true;
+        const userSnapshot = await db.ref(`users/${userId}`).once('value');
+        const userData = userSnapshot.val();
+        currentUser = { ...currentUser, ...userData };
+    }
+    
+    openAdminPanel();
+    if (currentProfileUser === userId) {
+        openProfile(userId);
+    }
+    loadFeed();
+};
+
+window.deleteUser = async function(userId) { 
+    if (confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم نهائياً؟')) { 
+        await db.ref(`users/${userId}`).remove(); 
+        showToast('🗑️ تم حذف المستخدم'); 
+        openAdminPanel(); 
+        loadFeed();
+    } 
+};
+
 window.closeAdmin = function() { document.getElementById('adminPanel').classList.remove('open'); };
 
 window.startVideoCallWithUser = async function(userId) {
