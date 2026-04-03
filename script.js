@@ -810,7 +810,7 @@ window.openSavedPosts = async function() {
             const postSnapshot = await db.ref(`posts/${postId}`).once('value');
             const post = postSnapshot.val();
             if (post) {
-                html += `<div class="saved-item" onclick="openComments('${postId}')">
+                html += `<div class="grid-item" onclick="openComments('${postId}')">
                     ${post.mediaUrl ? (post.mediaType === 'image' ? `<img src="${post.mediaUrl}">` : `<video src="${post.mediaUrl}"></video>`) : '<div class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800"><i class="fas fa-file-alt text-2xl text-gray-500"></i></div>'}
                 </div>`;
             }
@@ -981,9 +981,7 @@ window.createPost = async function() {
                 for (const [id, album] of Object.entries(albums)) {
                     if (album.name === albumName) {
                         albumExists = true;
-                        const currentImages = album.images || [];
-                        currentImages.push(mediaUrl);
-                        await db.ref(`albums/${currentUser.uid}/${id}/images`).set(currentImages);
+                        await db.ref(`albums/${currentUser.uid}/${id}/images`).push(mediaUrl);
                         break;
                     }
                 }
@@ -1585,23 +1583,36 @@ window.loadProfileMedia = async function(userId) {
 };
 
 window.openEditProfileModal = function() {
-    document.getElementById('editName').value = currentUser.displayName || currentUser.name;
+    document.getElementById('editName').value = currentUser.displayName || currentUser.name || '';
     document.getElementById('editBio').value = currentUser.bio || '';
     document.getElementById('editWebsite').value = currentUser.website || '';
     document.getElementById('editProfileModal').classList.add('open');
 };
 
-window.closeEditProfileModal = function() { document.getElementById('editProfileModal').classList.remove('open'); };
+window.closeEditProfileModal = function() { 
+    document.getElementById('editProfileModal').classList.remove('open'); 
+};
 
 window.saveProfileEdit = async function() {
     const newName = document.getElementById('editName')?.value;
     const newBio = document.getElementById('editBio')?.value;
     const newWebsite = document.getElementById('editWebsite')?.value;
-    if (newName) await currentUser.updateProfile({ displayName: newName });
-    await db.ref(`users/${currentUser.uid}`).update({ name: newName, bio: newBio, website: newWebsite });
-    currentUser.name = newName;
-    currentUser.bio = newBio;
-    currentUser.website = newWebsite;
+    
+    if (newName && newName.trim()) {
+        await currentUser.updateProfile({ displayName: newName.trim() });
+    }
+    
+    await db.ref(`users/${currentUser.uid}`).update({ 
+        name: newName || currentUser.name,
+        bio: newBio || "", 
+        website: newWebsite || "" 
+    });
+    
+    currentUser.name = newName || currentUser.name;
+    currentUser.bio = newBio || "";
+    currentUser.website = newWebsite || "";
+    currentUser.displayName = newName || currentUser.displayName;
+    
     closeEditProfileModal();
     openProfile(currentUser.uid);
     showToast('تم حفظ التغييرات');
@@ -1649,7 +1660,7 @@ async function loadChatMessages(userId) {
             html += `<div class="chat-message ${isSent ? 'sent' : ''}" ondblclick="showReactionPopup('${msgId}', ${isSent})">
                 <div class="message-bubble ${isSent ? 'sent' : ''}">
                     ${msg.text ? escapeHtml(msg.text) : ''}
-                    ${msg.imageUrl ? `<img src="${msg.imageUrl}" class="message-image" onclick="openImageModal('${msg.imageUrl}')">` : ''}
+                    ${msg.imageUrl ? `<img src="${msg.imageUrl}" class="message-image" onclick="openImageViewer(['${msg.imageUrl}'], 0)">` : ''}
                     ${msg.audioUrl ? `<audio controls class="audio-player" src="${msg.audioUrl}"></audio>` : ''}
                     ${reaction ? `<div class="message-reactions">${reaction.reaction}</div>` : ''}
                 </div>
@@ -1704,6 +1715,7 @@ window.sendChatImage = async function(input) {
 
 function showReactionPopup(messageId, isSent) {
     const popup = document.getElementById('reactionsPopup');
+    if (!popup) return;
     popup.style.display = 'flex';
     popup.style.opacity = '1';
     window.currentReactionMessageId = messageId;
@@ -1754,12 +1766,17 @@ window.openConversations = async function() {
     conversations.sort((a, b) => b.timestamp - a.timestamp);
     let html = '';
     for (const conv of conversations) {
-        const unreadCount = Object.values(conv.lastMessage).filter(m => !m.read && m.senderId !== currentUser.uid).length || 0;
+        let unreadCount = 0;
+        const messagesSnapshot = await db.ref(`chats/${getChatId(currentUser.uid, conv.userId)}`).once('value');
+        const messages = messagesSnapshot.val();
+        if (messages) {
+            unreadCount = Object.values(messages).filter(m => !m.read && m.senderId !== currentUser.uid).length;
+        }
         html += `<div class="follower-item" onclick="closeConversations(); openChat('${conv.userId}')">
             <div class="post-avatar" style="width: 48px; height: 48px;">${conv.userData?.avatar ? `<img src="${conv.userData.avatar}">` : '<i class="fas fa-user text-white text-xl flex items-center justify-center h-full"></i>'}</div>
             <div style="flex: 1;">
                 <div style="font-weight: 600;">${escapeHtml(conv.userData?.name || 'مستخدم')}</div>
-                <div style="font-size: 12px; color: #8e8e8e;">${conv.lastMessage.text ? conv.lastMessage.text.substring(0, 30) : (conv.lastMessage.audioUrl ? 'رسالة صوتية' : 'صورة')}</div>
+                <div style="font-size: 12px; color: #8e8e8e;">${conv.lastMessage.text ? conv.lastMessage.text.substring(0, 30) : (conv.lastMessage.audioUrl ? 'رسالة صوتية' : (conv.lastMessage.imageUrl ? 'صورة' : ''))}</div>
             </div>
             ${unreadCount > 0 ? `<div style="background: #ff6b35; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px;">${unreadCount}</div>` : ''}
         </div>`;
@@ -1777,10 +1794,18 @@ async function loadNotifications() {
         const existingBadge = notifIcon.querySelector('.notification-badge');
         if (notifications) {
             const unread = Object.values(notifications).filter(n => !n.read).length;
-            if (unread > 0 && !existingBadge) notifIcon.innerHTML = '<i class="far fa-heart"></i><div class="notification-badge">' + unread + '</div>';
-            else if (unread > 0 && existingBadge) existingBadge.textContent = unread;
-            else if (unread === 0 && existingBadge) existingBadge.remove();
-        } else if (existingBadge) existingBadge.remove();
+            if (unread > 0) {
+                if (!existingBadge) {
+                    notifIcon.innerHTML = '<i class="far fa-bell"></i><div class="notification-badge">' + unread + '</div>';
+                } else {
+                    existingBadge.textContent = unread;
+                }
+            } else if (existingBadge) {
+                notifIcon.innerHTML = '<i class="far fa-bell"></i>';
+            }
+        } else if (existingBadge) {
+            notifIcon.innerHTML = '<i class="far fa-bell"></i>';
+        }
     });
 }
 
@@ -1790,7 +1815,8 @@ window.openNotifications = async function() {
     const container = document.getElementById('notificationsList');
     if (!notifications) { container.innerHTML = '<div class="text-center p-4 text-gray-500">لا توجد إشعارات</div>'; document.getElementById('notificationsPanel')?.classList.add('open'); return; }
     let html = '';
-    for (const [id, notif] of Object.entries(notifications).sort((a, b) => b[1].timestamp - a[1].timestamp)) {
+    const sorted = Object.entries(notifications).sort((a, b) => b[1].timestamp - a[1].timestamp);
+    for (const [id, notif] of sorted) {
         html += `<div class="follower-item" onclick="markNotificationRead('${id}'); ${notif.type === 'like' ? `openComments('${notif.postId}')` : notif.type === 'comment' ? `openComments('${notif.postId}')` : notif.type === 'call' ? `window.location.reload()` : `openProfile('${notif.userId}')`}">
             <div class="post-avatar" style="width: 44px; height: 44px;"><i class="fas ${notif.type === 'like' ? 'fa-heart' : notif.type === 'comment' ? 'fa-comment' : notif.type === 'call' ? 'fa-video' : 'fa-user-plus'} text-white text-xl flex items-center justify-center h-full"></i></div>
             <div style="flex: 1;">
@@ -1807,7 +1833,10 @@ window.openNotifications = async function() {
     loadNotifications();
 };
 
-window.markNotificationRead = async function(notifId) { await db.ref(`notifications/${currentUser.uid}/${notifId}`).update({ read: true }); loadNotifications(); };
+window.markNotificationRead = async function(notifId) { 
+    await db.ref(`notifications/${currentUser.uid}/${notifId}`).update({ read: true }); 
+    loadNotifications(); 
+};
 
 window.searchAll = async function() {
     const query = document.getElementById('searchInput')?.value.toLowerCase();
@@ -1823,6 +1852,12 @@ window.searchAll = async function() {
     if (hashtags && query.startsWith('#')) {
         const tag = query.substring(1);
         if (hashtags[tag]) results.push({ type: 'hashtag', data: { tag: tag, count: Object.keys(hashtags[tag]).length } });
+    } else if (hashtags) {
+        for (const [tag, posts] of Object.entries(hashtags)) {
+            if (tag.toLowerCase().includes(query)) {
+                results.push({ type: 'hashtag', data: { tag: tag, count: Object.keys(posts).length } });
+            }
+        }
     }
     
     let html = '';
@@ -1841,7 +1876,7 @@ window.searchAll = async function() {
 };
 
 window.openAdminPanel = async function() {
-    if (!currentUser || (currentUser.email !== ADMIN_EMAIL && !currentUser.isAdmin)) {
+    if (currentUser.email !== ADMIN_EMAIL && !currentUser.isAdmin) {
         showToast('🚫 غير مصرح لك بالدخول إلى لوحة التحكم');
         return;
     }
@@ -1988,8 +2023,8 @@ window.previewMedia = function(input, type) {
         const preview = document.getElementById('mediaPreview');
         const reader = new FileReader();
         reader.onload = function(e) {
-            if (type === 'image') preview.innerHTML = `<img src="${e.target.result}"><div class="remove-media" onclick="removeSelectedMedia()"><i class="fas fa-times"></i></div>`;
-            else if (type === 'video') preview.innerHTML = `<video src="${e.target.result}" controls></video><div class="remove-media" onclick="removeSelectedMedia()"><i class="fas fa-times"></i></div>`;
+            if (type === 'image') preview.innerHTML = `<img src="${e.target.result}"><div class="remove-media" onclick="removeSelectedMedia()" style="position: absolute; top: 8px; right: 8px; background: black; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;"><i class="fas fa-times"></i></div>`;
+            else if (type === 'video') preview.innerHTML = `<video src="${e.target.result}" controls></video><div class="remove-media" onclick="removeSelectedMedia()" style="position: absolute; top: 8px; right: 8px; background: black; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;"><i class="fas fa-times"></i></div>`;
             preview.style.display = 'block';
         };
         reader.readAsDataURL(file);
