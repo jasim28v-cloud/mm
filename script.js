@@ -46,7 +46,6 @@ function closeImageModal() {
     if (modal) modal.classList.remove('open');
 }
 
-// Professional Image Viewer
 function openImageViewer(images, index) {
     currentImageUrls = images;
     currentImageIndex = index;
@@ -145,7 +144,6 @@ async function uploadToCloudinary(file) {
     }
 }
 
-// Voice Recording
 async function startVoiceRecording() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -198,7 +196,6 @@ function toggleVoiceRecording() {
     }
 }
 
-// Typing Indicator
 function onTyping() {
     if (!currentChatUser) return;
     const chatId = getChatId(currentUser.uid, currentChatUser.uid);
@@ -222,7 +219,6 @@ function listenForTyping(chatId) {
     });
 }
 
-// Emoji and Sticker Functions
 function addEmojiToPost(emoji) {
     const textarea = document.getElementById('postText');
     textarea.value += emoji;
@@ -245,7 +241,6 @@ function addStickerToPost(sticker) {
     document.getElementById('stickerPicker').style.display = 'none';
 }
 
-// Poll Functions
 function addPollToCompose() {
     const pollBuilder = document.getElementById('pollBuilder');
     if (pollBuilder.style.display === 'none') {
@@ -275,7 +270,6 @@ function addPollOption() {
     }
 }
 
-// Schedule Post
 function toggleSchedulePicker() {
     const picker = document.getElementById('schedulePicker');
     if (picker.style.display === 'none') {
@@ -317,8 +311,6 @@ async function schedulePost() {
     await db.ref(`scheduledPosts/${currentUser.uid}`).push(scheduledPost);
     showToast('تم جدولة المنشور');
     closeCompose();
-    
-    // Check scheduled posts periodically
     checkScheduledPosts();
 }
 
@@ -351,7 +343,6 @@ async function checkScheduledPosts() {
     }
 }
 
-// Double Click Like Animation
 function createHeartAnimation(x, y) {
     const heart = document.createElement('div');
     heart.className = 'heart-animation';
@@ -364,7 +355,6 @@ function createHeartAnimation(x, y) {
     }, 600);
 }
 
-// Export User Data
 async function exportUserData() {
     showToast('جاري تصدير بياناتك...');
     const userData = {
@@ -406,7 +396,6 @@ async function exportUserData() {
     showToast('تم تصدير بياناتك بنجاح');
 }
 
-// Album Functions
 async function createAlbum() {
     const albumName = prompt('اسم الألبوم:');
     if (!albumName) return;
@@ -458,7 +447,6 @@ async function openAlbum(albumId) {
     }
 }
 
-// Read Mode
 function toggleReadMode() {
     readModeActive = !readModeActive;
     const toggle = document.getElementById('readModeToggle');
@@ -475,7 +463,6 @@ function toggleReadMode() {
     }
 }
 
-// Hide Likes
 function toggleHideLikes() {
     hideLikesActive = !hideLikesActive;
     const toggle = document.getElementById('hideLikesToggle');
@@ -491,21 +478,18 @@ function toggleHideLikes() {
     loadFeed();
 }
 
-// Pin Comment
 async function pinComment(postId, commentId) {
     await db.ref(`posts/${postId}/pinnedComment`).set(commentId);
     showToast('تم تثبيت التعليق');
     loadComments(postId);
 }
 
-// Quote Post
 async function quotePost(postId, originalText, originalUser) {
     openCompose();
     document.getElementById('postText').value = `اقتباس من @${originalUser}: "${originalText.substring(0, 100)}"\n\n`;
     window.quoteOriginalPostId = postId;
 }
 
-// Agora Video Call
 async function initAgoraCall() {
     if (!agoraClient) {
         agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
@@ -566,7 +550,6 @@ window.startVideoCallWithCurrentUser = async function() {
     await notifRef.set({ type: 'call', userId: currentUser.uid, userName: currentUser.displayName || currentUser.name, channelName: channelName, timestamp: Date.now(), read: false });
 };
 
-// Theme
 window.toggleTheme = function() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
@@ -584,7 +567,6 @@ window.toggleTheme = function() {
     showToast(isDark ? 'الوضع الليلي' : 'الوضع النهاري');
 };
 
-// Do Not Disturb
 window.toggleDoNotDisturb = async function() {
     const dndToggle = document.getElementById('dndToggle');
     const isDnd = dndToggle.classList.contains('active');
@@ -611,7 +593,6 @@ async function loadDndStatus() {
     }
 }
 
-// Logout
 window.logout = async function() {
     try {
         await auth.signOut();
@@ -625,7 +606,6 @@ window.logout = async function() {
     }
 };
 
-// Auth Functions
 window.switchAuth = function(form) {
     document.getElementById('loginForm').classList.remove('active');
     document.getElementById('registerForm').classList.remove('active');
@@ -766,7 +746,6 @@ window.register = async function() {
     }
 };
 
-// Profile Views
 async function recordProfileView(viewedUserId) {
     if (viewedUserId === currentUser.uid) return;
     
@@ -804,7 +783,6 @@ window.closeProfileViews = function() {
     document.getElementById('profileViewsPanel').classList.remove('open');
 };
 
-// Saved Posts
 window.savePost = async function(postId) {
     const saveRef = db.ref(`savedPosts/${currentUser.uid}/${postId}`);
     const snapshot = await saveRef.once('value');
@@ -846,7 +824,6 @@ window.closeSavedPosts = function() {
     document.getElementById('savedPostsPanel').classList.remove('open');
 };
 
-// Pin Post
 window.pinPost = async function(postId) {
     const currentPinned = await db.ref(`users/${currentUser.uid}/pinnedPost`).once('value');
     if (currentPinned.val() === postId) {
@@ -860,7 +837,6 @@ window.pinPost = async function(postId) {
     if (currentProfileUser) loadProfilePosts(currentProfileUser);
 };
 
-// Report
 window.openReportModal = function(postId) {
     currentReportPostId = postId;
     selectedReportReason = null;
@@ -897,7 +873,6 @@ window.submitReport = async function() {
     closeReportModal();
 };
 
-// Mute User
 window.muteUser = async function(userId, minutes = 60) {
     const muteUntil = Date.now() + (minutes * 60 * 1000);
     await db.ref(`users/${userId}/mutedUntil`).set(muteUntil);
@@ -911,7 +886,6 @@ async function isUserMuted(userId) {
     return muteUntil && muteUntil > Date.now();
 }
 
-// Change Avatar & Cover
 window.changeAvatar = async function() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -952,7 +926,6 @@ window.changeCover = async function() {
     input.click();
 };
 
-// Block User
 async function blockUser(userId) {
     await db.ref(`users/${currentUser.uid}/blockedUsers/${userId}`).set(true);
     showToast('تم حظر المستخدم');
@@ -970,7 +943,6 @@ async function isBlocked(userId) {
     return snapshot.exists();
 }
 
-// Create Post
 window.createPost = async function() {
     let text = document.getElementById('postText')?.value;
     
@@ -999,7 +971,6 @@ window.createPost = async function() {
         if (!mediaUrl) return;
     }
     
-    // Add to album if media is image
     if (mediaType === 'image' && mediaUrl) {
         const albumName = prompt('هل تريد إضافة هذه الصورة إلى ألبوم؟ (اتركه فارغاً للتخطي)', '');
         if (albumName) {
@@ -1010,7 +981,9 @@ window.createPost = async function() {
                 for (const [id, album] of Object.entries(albums)) {
                     if (album.name === albumName) {
                         albumExists = true;
-                        await db.ref(`albums/${currentUser.uid}/${id}/images`).push(mediaUrl);
+                        const currentImages = album.images || [];
+                        currentImages.push(mediaUrl);
+                        await db.ref(`albums/${currentUser.uid}/${id}/images`).set(currentImages);
                         break;
                     }
                 }
@@ -1030,7 +1003,6 @@ window.createPost = async function() {
     const hashtags = extractHashtags(text);
     const postRef = db.ref('posts').push();
     
-    // Check if it's a quote post
     let quoteData = null;
     if (window.quoteOriginalPostId) {
         const originalPostSnapshot = await db.ref(`posts/${window.quoteOriginalPostId}`).once('value');
@@ -1045,7 +1017,6 @@ window.createPost = async function() {
         delete window.quoteOriginalPostId;
     }
     
-    // Check for poll
     let pollData = null;
     const pollQuestion = document.getElementById('pollQuestion')?.value;
     if (pollQuestion) {
@@ -1263,7 +1234,6 @@ async function loadFeed() {
         
         formattedText = formattedText.replace(/@(\w+)/g, '<span class="post-hashtags" onclick="searchUser(\'$1\')">@$1</span>');
         
-        // Build poll HTML if exists
         let pollHtml = '';
         if (post.poll && post.poll.question) {
             pollHtml = '<div class="poll-container">';
@@ -1286,7 +1256,6 @@ async function loadFeed() {
             pollHtml += '</div>';
         }
         
-        // Build quote HTML if exists
         let quoteHtml = '';
         if (post.quote) {
             quoteHtml = `
@@ -1297,11 +1266,9 @@ async function loadFeed() {
             `;
         }
         
-        // Build image grid for multiple images
         let mediaHtml = '';
         if (post.mediaUrl) {
             if (post.mediaType === 'image') {
-                // Check if there are multiple images
                 const albumSnapshot = await db.ref(`albums/${post.userId}`).once('value');
                 const albums = albumSnapshot.val();
                 let allImages = [post.mediaUrl];
@@ -1380,7 +1347,6 @@ window.searchHashtag = async function(tag) {
     await searchAll();
 };
 
-// Comments Functions
 window.openComments = async function(postId) {
     currentPostId = postId;
     document.getElementById('commentsPanel').classList.add('open');
@@ -1485,7 +1451,6 @@ window.addComment = async function() {
     showToast('تم إضافة التعليق');
 };
 
-// Profile Functions
 window.openMyProfile = function() { if (currentUser) openProfile(currentUser.uid); };
 
 window.openProfile = async function(userId) {
@@ -1619,7 +1584,6 @@ window.loadProfileMedia = async function(userId) {
     grid.innerHTML = html;
 };
 
-// Edit Profile
 window.openEditProfileModal = function() {
     document.getElementById('editName').value = currentUser.displayName || currentUser.name;
     document.getElementById('editBio').value = currentUser.bio || '';
@@ -1643,7 +1607,6 @@ window.saveProfileEdit = async function() {
     showToast('تم حفظ التغييرات');
 };
 
-// Chat Functions
 function getChatId(user1, user2) { return [user1, user2].sort().join('_'); }
 
 window.openChat = async function(userId) {
@@ -1653,7 +1616,6 @@ window.openChat = async function(userId) {
     const chatAvatar = document.getElementById('chatAvatar');
     chatAvatar.innerHTML = currentChatUser.avatar ? `<img src="${currentChatUser.avatar}" style="width:100%;height:100%;object-fit:cover">` : '<i class="fas fa-user text-white text-xl flex items-center justify-center h-full"></i>';
     
-    // Update last seen
     const lastSeenSnapshot = await db.ref(`users/${userId}/lastSeen`).once('value');
     const lastSeen = lastSeenSnapshot.val();
     const lastSeenEl = document.getElementById('chatLastSeen');
@@ -1767,14 +1729,12 @@ async function sendReaction(reaction) {
     showToast(`تم إرسال ${reaction}`);
 }
 
-// Update last seen
 setInterval(async () => {
     if (currentUser) {
         await db.ref(`users/${currentUser.uid}/lastSeen`).set(Date.now());
     }
 }, 60000);
 
-// Conversations
 window.openConversations = async function() {
     const conversationsList = document.getElementById('conversationsList');
     conversationsList.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
@@ -1808,7 +1768,6 @@ window.openConversations = async function() {
     document.getElementById('conversationsPanel')?.classList.add('open');
 };
 
-// Notifications
 async function loadNotifications() {
     if (!currentUser) return;
     db.ref(`notifications/${currentUser.uid}`).on('value', (snapshot) => {
@@ -1850,7 +1809,6 @@ window.openNotifications = async function() {
 
 window.markNotificationRead = async function(notifId) { await db.ref(`notifications/${currentUser.uid}/${notifId}`).update({ read: true }); loadNotifications(); };
 
-// Search
 window.searchAll = async function() {
     const query = document.getElementById('searchInput')?.value.toLowerCase();
     if (!query) { document.getElementById('searchResults').innerHTML = ''; return; }
@@ -1882,9 +1840,8 @@ window.searchAll = async function() {
     document.getElementById('searchResults').innerHTML = html || '<div class="text-center p-4 text-gray-500">لا توجد نتائج</div>';
 };
 
-// Admin Panel
 window.openAdminPanel = async function() {
-    if (currentUser.email !== ADMIN_EMAIL && !currentUser.isAdmin) {
+    if (!currentUser || (currentUser.email !== ADMIN_EMAIL && !currentUser.isAdmin)) {
         showToast('🚫 غير مصرح لك بالدخول إلى لوحة التحكم');
         return;
     }
@@ -1938,7 +1895,6 @@ window.startVideoCallWithUser = async function(userId) {
 
 window.endVideoCall = endVideoCall;
 
-// Followers List
 window.openFollowersList = async function(type) {
     document.getElementById('followersTitle').textContent = type === 'followers' ? 'المتابعون' : 'المتابَعون';
     const refPath = type === 'followers' ? `followers/${currentProfileUser}` : `following/${currentProfileUser}`;
@@ -1959,7 +1915,6 @@ window.openFollowersList = async function(type) {
     document.getElementById('followersPanel')?.classList.add('open');
 };
 
-// Stories
 window.openStories = async function() { await loadStories(); document.getElementById('storiesPanel')?.classList.add('open'); };
 async function loadStories() {
     const snapshot = await db.ref('stories').once('value');
@@ -1995,7 +1950,6 @@ window.addStory = async function() {
 };
 function viewStory(storyId) { showToast('مشاهدة القصة قريباً...'); }
 
-// Panel Controls
 window.closeCompose = function() { 
     document.getElementById('composeModal').classList.remove('open'); 
     document.getElementById('postText').value = ''; 
@@ -2048,7 +2002,6 @@ function removeSelectedMedia() {
 }
 window.toggleVoiceRecording = toggleVoiceRecording;
 
-// Auth State Listener
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
